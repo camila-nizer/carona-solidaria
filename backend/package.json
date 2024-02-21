@@ -1,0 +1,11 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend do projeto carona solidária",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run backend"
+  },
+  "author": "Camila Nizer Porfirio da Rosa",
+  "license": "ISC"
+}

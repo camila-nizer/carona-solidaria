@@ -1,0 +1,17 @@
+## Porta utilizada :
+- 4000
+
+## Como rodar (Sem docker):
+
+- Para rodar aqui o banco de dados deve estar previamente instanciado.
+
+- O Backend deve estar rodando nesta URL "http://localhost:4000/"
+
+- Abra o terminal
+
+- Execute o comando "npm start"
+
+## Como rodar (docker):
+
+- Abra o terminal
+- Execute o comando docker compose up --build
