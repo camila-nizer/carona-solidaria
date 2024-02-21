@@ -1,5 +1,5 @@
-## Porta utilizada :
-- 4000
+## Porta utilizada para backend :
+- 3000
 ## Como rodar (sem docker):
 
 - Para rodar aqui o banco de dados deve estar previamente instanciado.
