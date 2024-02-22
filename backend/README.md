@@ -1,6 +1,6 @@
 ## Porta utilizada para backend :
 - 3000
-## Como rodar (sem docker):
+## Como rodar:
 
 - Para rodar aqui o banco de dados deve estar previamente instanciado.
 
@@ -8,7 +8,3 @@
 
 - Execute o comando "npm start"
 
-## Como rodar (docker):
-
-- Abra o terminal
-- Execute o comando docker compose up --build

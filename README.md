@@ -17,8 +17,6 @@ Camila Nizer Porfirio da Rosa.
 
 ## 💻 Tecnologias utilizadas
 
-- 🐳 Docker
-
 ## Frontend:
 
 - React.js
@@ -33,4 +31,5 @@ Camila Nizer Porfirio da Rosa.
 
 ## Informações para rodar o projeto:
 
-- Verificar README.md do projeto frontend e backend
+- Instanciar banco Postgresql
+- Verificar README.md do projeto iniciando pelo backend e após o frontend
