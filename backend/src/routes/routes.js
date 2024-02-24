@@ -15,7 +15,10 @@ app.put('/updateUser', users.updateUser)
 app.put('/deleteUser', users.deleteUser) // apenas altera o status para excluído
 
 app.get('/getActiveRide', trips.getActiveRide)
-app.post('/getAllRides', trips.getAllRides)
+
+app.get('/getAllRides', trips.getAllRides)
+app.get('/getAllRidesADM', trips.getAllRidesADM)
+
 app.put('/deleteRide', trips.updateRide)
 
 module.exports = app 

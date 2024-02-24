@@ -1,6 +1,5 @@
 const health = (req, res)=>{
-    console.log("entrou aqui")
-    res.status(200).send("Backend funcionando uhulll...")
+    res.status(200).send("Everything sounds good in Backend...")
     }
 
 module.exports = {
