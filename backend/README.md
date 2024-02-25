@@ -6,5 +6,5 @@
 
 - Abra o terminal
 
-- Execute o comando "npm start"
+- Execute o comando "npm run start"
 
