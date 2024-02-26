@@ -7,7 +7,7 @@ const findByCPF=(cpf)=>{
         const pesquisa= `SELECT * FROM users where cpf = '${cpf}'`
         db.query(pesquisa).then((result)=> { 
             if (result.length>=1){
-                resolve(result[0].ID_USER)
+                resolve(result[0].id_user)
             }else{
                 resolve(false)
             }   
@@ -27,7 +27,7 @@ const insertNewStatus=(idUser, status,  responsavel)=>{
 
     const status_perfilString= JSON.stringify(status_perfil)
     const createStatusUser=`INSERT INTO user_status ("id_user_status", 
-            "ID_USER", 
+            "id_user", 
             status) 
             VALUES ('${idUserStatus}',
             '${idUser}',
@@ -61,7 +61,7 @@ const createUser = (req, res)=>{
             console.log("entrou no not found")
             //
             const createUser= `INSERT INTO users (
-                "ID_USER",
+                "id_user",
                 nome, 
                 cpf, 
                 nasc, 
@@ -99,23 +99,22 @@ const createUser = (req, res)=>{
 const getUser = (req, res)=>{
     const idUser = req.query.idUser
     console.log(idUser)
-    const findUser= `SELECT * FROM users where "ID_USER" = '${idUser}'`
-    //TODO: FAZER INNER JOIN PRA PEGAR TABELA DE STATUS
+    const findUser= `SELECT * FROM users where "id_user" = '${idUser}' INNER JOIN user_status on users.id_user = user_status.id_user`
+    //TODO: FAZER INNER JOIN PRA PEGAR TABELA DE STATUS (NAO FUNCIONOU)
     db.query(findUser).then((result)=>{
         res.status(200).send(result)
     })
 }
 
 const getAllUsers = (req, res)=>{
-    const findAllUsers = `SELECT * FROM users inner join user_status status `
-    //TODO: FUNÇÃO NÃO ESTÁ FUNCIONANDO, VERIFICAR INNER JOIN
+    const findAllUsers = `SELECT * FROM users INNER JOIN user_status on users.id_user = user_status.id_user  ` //FUNÇÃO OK
     db.query(findAllUsers).then((result)=>{
         res.status(200).send(result)
     })
 }
 
 const getStatusUser = (req, res)=>{
-    const findStatusUser= `SELECT user_status FROM users where "ID_USER"= '${req}' `
+    const findStatusUser= `SELECT user_status FROM users where "id_user"= '${req}' `
     db.query(findStatusUser).then((result)=>{
         res.status(200).send(result)
     })
@@ -136,7 +135,7 @@ const deleteUser = (req, res)=>{
 
     try {
         const updateUser= `UPDATE users SET status_perfil = ARRAY ['${status_perfilString}']::json[] 
-        where "ID_USER" ='${idUser}'`
+        where "id_user" ='${idUser}'`
         db.query(updateUser).then((result)=>{
             console.log("entrou no opdate user (delete)")
             res.status(200).send("Usuário deletado com sucesso")
@@ -166,10 +165,10 @@ const updateUser = (req, res)=>{
             }
     ] 
     statusUser.unshift(newStatusUser);
-    let atualizar = `UPDATE users SET nome= '${nome}',  status_perfil= '${statusUser}',   where ID_USER ='${idUser}'`
+    let atualizar = `UPDATE users SET nome= '${nome}',  status_perfil= '${statusUser}',   where id_user ='${idUser}'`
 
     if (opcao=="telefone"){
-        atualizar = `UPDATE users SET telefone= '${telefone}',  status_perfil= '${statusUser}',   where ID_USER ='${idUser}'`
+        atualizar = `UPDATE users SET telefone= '${telefone}',  status_perfil= '${statusUser}',   where id_user ='${idUser}'`
     }
 
 
