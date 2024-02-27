@@ -99,15 +99,44 @@ const createUser = (req, res)=>{
 //TODO: VERIFICAR COMO TABELA DE STATUS VOLTA PRA TALVEZ CRIAR FUNÇÃO PRA PEGAR O MAIS RECENTE
 const getUser = (req, res)=>{
     const idUser = req.query.id_user
-    console.log(idUser)
-    const findUser= `SELECT * FROM users INNER JOIN user_status on users.id_user = user_status.id_user  where users.id_user = '${idUser}'`
+    const findUser= `SELECT
+    users.id_user AS usuarios,
+    users.cpf as cpf,
+    users.nasc as nascimento,
+    users.email as email,
+    users.telefone as telefone,
+    users.tipo_usuario as tipo_usuario,
+    users.cnh as cnh,
+    users.vinculo_fmp as vinculo_fmp,
+    users.matricula as matricula,
+    users.nome as nome,
+    json_agg(us ORDER BY us.created_at DESC) as status_array
+   FROM users
+   INNER JOIN user_status us ON users.id_user = us.id_user
+   where users.id_user = '${idUser}'
+   GROUP BY usuarios;`
     db.query(findUser).then((result)=>{
         res.status(200).send(result)
     })
 }
 
 const getAllUsers = (req, res)=>{
-    const findAllUsers = `SELECT * FROM users INNER JOIN user_status on users.id_user = user_status.id_user  ` //FUNÇÃO OK
+    const findAllUsers = `SELECT
+    users.id_user AS usuarios,
+    users.cpf as cpf,
+    users.nasc as nascimento,
+    users.email as email,
+    users.telefone as telefone,
+    users.tipo_usuario as tipo_usuario,
+    users.cnh as cnh,
+    users.vinculo_fmp as vinculo_fmp,
+    users.matricula as matricula,
+    users.nome as nome,
+    json_agg(us ORDER BY us.created_at DESC) as status_array
+   FROM users
+   INNER JOIN user_status us ON users.id_user = us.id_user
+   GROUP BY usuarios;` //FUNÇÃO OK
+    result_array= []
     db.query(findAllUsers).then((result)=>{
         res.status(200).send(result)
     })
