@@ -18,20 +18,21 @@ const findByCPF=(cpf)=>{
 const insertNewStatus=(idUser, status,  responsavel)=>{
     return new Promise((resolve, reject) => {
         const idUserStatus= uuidv4();
-        const status_perfil=
-        {
-        createdAt: Date.now(),
-        status: status,
-        responsavel:responsavel,
-        }
+        const statusUser = status
+        const responsavelUser= responsavel
+        
 
-    const status_perfilString= JSON.stringify(status_perfil)
     const createStatusUser=`INSERT INTO user_status ("id_user_status", 
             "id_user", 
-            status) 
-            VALUES ('${idUserStatus}',
+            "status",
+            "responsável",
+            "created_at") 
+            VALUES (
+            '${idUserStatus}',
             '${idUser}',
-            ARRAY ['${status_perfilString}']::json[])` 
+            '${statusUser}',
+            '${responsavelUser}',
+            NOW())` 
 
     db.query(createStatusUser).then((result)=>{
         return true
@@ -97,10 +98,9 @@ const createUser = (req, res)=>{
 }
 //TODO: VERIFICAR COMO TABELA DE STATUS VOLTA PRA TALVEZ CRIAR FUNÇÃO PRA PEGAR O MAIS RECENTE
 const getUser = (req, res)=>{
-    const idUser = req.query.idUser
+    const idUser = req.query.id_user
     console.log(idUser)
-    const findUser= `SELECT * FROM users where "id_user" = '${idUser}' INNER JOIN user_status on users.id_user = user_status.id_user`
-    //TODO: FAZER INNER JOIN PRA PEGAR TABELA DE STATUS (NAO FUNCIONOU)
+    const findUser= `SELECT * FROM users INNER JOIN user_status on users.id_user = user_status.id_user  where users.id_user = '${idUser}'`
     db.query(findUser).then((result)=>{
         res.status(200).send(result)
     })
@@ -122,24 +122,13 @@ const getStatusUser = (req, res)=>{
 
 
 const deleteUser = (req, res)=>{
-    const idUser = req.body.idUser
+    const idUser = req.body.id_user
     const idResponsavel= req.body.idResponsavel
-    let newStatusUser= getStatusUser(idUser)
-    let statusUser=[{   createAt: Date.now(),
-            status: 'deletado',
-            responsavel:idResponsavel,
-            }]
-            //TODO: VERIFICAR ISSO AQUIIIIII
-    //statusUser.unshift(newStatusUser);
-    const status_perfilString= JSON.stringify(statusUser)
-
+    // insertNewStatus=(idUser, "deletado",  idResponsavel)
     try {
-        const updateUser= `UPDATE users SET status_perfil = ARRAY ['${status_perfilString}']::json[] 
-        where "id_user" ='${idUser}'`
-        db.query(updateUser).then((result)=>{
-            console.log("entrou no opdate user (delete)")
-            res.status(200).send("Usuário deletado com sucesso")
-        })
+        insertNewStatus(idUser, "deletado",  idResponsavel)
+        res.status(200).send("Usuário deletado com sucesso")
+
         
     } catch (error) {
         res.status(400).send("Erro ao deletar usuário: " + error)
