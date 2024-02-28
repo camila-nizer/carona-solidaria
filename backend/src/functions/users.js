@@ -1,5 +1,6 @@
 const db= require("../database");
 const {v4: uuidv4}= require("uuid")
+const crypto = require('crypto');
 
 
 const findByCPF=(cpf)=>{
@@ -13,6 +14,12 @@ const findByCPF=(cpf)=>{
             }   
         })
     })
+}
+
+const hashPassword=(password)=>{
+        const hash = crypto.createHash('md5').update(password).digest('hex');
+        console.log(toString(hash));
+        return hash
 }
 
 const insertNewStatus=(idUser, status,  responsavel)=>{
@@ -59,8 +66,8 @@ const createUser = (req, res)=>{
         console.log("found ")
         console.log(found)
         if (!found){
-            console.log("entrou no not found")
-            //
+            const hashPass = hashPassword(senha_hash)
+
             const createUser= `INSERT INTO users (
                 "id_user",
                 nome, 
@@ -83,7 +90,7 @@ const createUser = (req, res)=>{
             '${cnh}',
             '${vinculoFMP}',
             '${matricula}',
-            '${senha_hash}')`
+            '${hashPass}')`
             db.query(createUser).then((result)=>{
                 booleanStatus= insertNewStatus(idUser, 'ativo', 'newUser')
                 if (booleanStatus){
@@ -96,11 +103,12 @@ const createUser = (req, res)=>{
     })    
 
 }
-//TODO: VERIFICAR COMO TABELA DE STATUS VOLTA PRA TALVEZ CRIAR FUNÇÃO PRA PEGAR O MAIS RECENTE
+
 const getUser = (req, res)=>{
     const idUser = req.query.id_user
     const findUser= `SELECT
     users.id_user AS usuarios,
+    users.nome as nome,
     users.cpf as cpf,
     users.nasc as nascimento,
     users.email as email,
@@ -109,7 +117,6 @@ const getUser = (req, res)=>{
     users.cnh as cnh,
     users.vinculo_fmp as vinculo_fmp,
     users.matricula as matricula,
-    users.nome as nome,
     json_agg(us ORDER BY us.created_at DESC) as status_array
    FROM users
    INNER JOIN user_status us ON users.id_user = us.id_user
@@ -123,6 +130,7 @@ const getUser = (req, res)=>{
 const getAllUsers = (req, res)=>{
     const findAllUsers = `SELECT
     users.id_user AS usuarios,
+    users.nome as nome,
     users.cpf as cpf,
     users.nasc as nascimento,
     users.email as email,
@@ -131,7 +139,6 @@ const getAllUsers = (req, res)=>{
     users.cnh as cnh,
     users.vinculo_fmp as vinculo_fmp,
     users.matricula as matricula,
-    users.nome as nome,
     json_agg(us ORDER BY us.created_at DESC) as status_array
    FROM users
    INNER JOIN user_status us ON users.id_user = us.id_user
@@ -142,18 +149,26 @@ const getAllUsers = (req, res)=>{
     })
 }
 
-const getStatusUser = (req, res)=>{
-    const findStatusUser= `SELECT user_status FROM users where "id_user"= '${req}' `
-    db.query(findStatusUser).then((result)=>{
-        res.status(200).send(result)
-    })
+const updateReativaUsuario = (req, res)=>{
+    const idUser = req.body.id_user
+    const idResponsavel= req.body.idResponsavel    
+
+    try {
+        db.query(atualizar).then((result)=>{
+            insertNewStatus(idUser, "ativo",  idResponsavel)
+            res.status(200).send("Usuário reativado com sucesso")
+        })
+        
+    } catch (error) {
+        res.status(400).send("Não foi possivel reativar usuário: ", error)
+    }
 }
 
 
 const deleteUser = (req, res)=>{
     const idUser = req.body.id_user
     const idResponsavel= req.body.idResponsavel
-    // insertNewStatus=(idUser, "deletado",  idResponsavel)
+
     try {
         insertNewStatus(idUser, "deletado",  idResponsavel)
         res.status(200).send("Usuário deletado com sucesso")
@@ -166,32 +181,20 @@ const deleteUser = (req, res)=>{
 }
 
 const updateUser = (req, res)=>{
-
-    const idUser = req.body.idUser
+    const idUser = req.body.id_user
     const nome= req.body.nome
-    const idResponsavel= req.body.idResponsavel
-    const newStatusUser= getStatusUser(idUser)
-    
+    const idResponsavel= req.body.idResponsavel    
     const telefone=req.body.telefone
     const opcao=req.body.opcao
 
-    let statusUser=[
-        {
-            createAt: Date.now(),
-            status: 'editado',
-            responsavel:idResponsavel,
-            }
-    ] 
-    statusUser.unshift(newStatusUser);
-    let atualizar = `UPDATE users SET nome= '${nome}',  status_perfil= '${statusUser}',   where id_user ='${idUser}'`
+    let atualizar = `UPDATE users SET nome= '${nome}' where id_user ='${idUser}'`
 
     if (opcao=="telefone"){
-        atualizar = `UPDATE users SET telefone= '${telefone}',  status_perfil= '${statusUser}',   where id_user ='${idUser}'`
+        atualizar = `UPDATE users SET telefone= '${telefone}' where id_user ='${idUser}'`
     }
-
-
     try {
         db.query(atualizar).then((result)=>{
+            insertNewStatus(idUser, "editado",  idResponsavel)
             res.status(200).send("Dados atualizados com sucesso")
         })
         
@@ -200,11 +203,32 @@ const updateUser = (req, res)=>{
     }
 }
 
+const newPasswordUser = (req, res)=>{
+    const idUser = req.body.id_user
+    const newPassword= req.body.senha_hash
+    const idResponsavel= req.body.idResponsavel   
+    const pass_hash = hashPassword(newPassword) 
+
+    let atualizarSenha = `UPDATE users SET senha_hash= '${pass_hash}' where id_user ='${idUser}'`
+
+    try {
+        db.query(atualizarSenha).then((result)=>{
+            insertNewStatus(idUser, "editado",  idResponsavel)
+            res.status(200).send("Senha atualizada com sucesso")
+        })
+        
+    } catch (error) {
+        res.status(400).send("Não foi possivel atualizar a senha: ", error)
+    }
+}
+
 
 module.exports = {
     createUser: createUser,
     getUser: getUser,
-    getAllUsers:getAllUsers, //de adm pegar todos os usuários
+    getAllUsers:getAllUsers, //função para adm pegar todos os usuários
     updateUser: updateUser,
     deleteUser: deleteUser,
+    updateReativaUsuario:updateReativaUsuario, //função para adm reativar usuario
+    newPasswordUser:newPasswordUser, //FUNÇÃO TROCA SENHA (apenas adm pode trocar) TODO: FUNÇÃO PARA USUARIO TROCAR SENHA
 }
