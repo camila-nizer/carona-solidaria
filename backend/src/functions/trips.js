@@ -44,7 +44,7 @@ const getActiveRide = (req, res)=>{
 const finishRace = (req, res)=>{
     const idDriver = req.query.idDriver
     
-    const corridas= getAllRides(idDriver)
+    const corridas= getAllRidesUser(idDriver)
     const datenow= Date.now()
     
 
@@ -78,27 +78,124 @@ const finishRace = (req, res)=>{
 }
 
 
-const getStatusRide = (req, res)=>{
-    const idCorrida= req.query.idCorrida
-    const findStatusUser= `SELECT Status_Corrida FROM users where ID_CORRIDA= '${idCorrida}' `
-    db.query(findStatusUser).then((result)=>{
-        res.status(200).send(result)
+const insertNewStatusRide=(idUser, status,  responsavel, idcorrida)=>{ //VERIFICAR SE QUERY FUNCIONA
+    return new Promise((resolve, reject) => {
+        const id_corrida_status= uuidv4();
+        const id_motorista = idUser
+        const statusCorrida = status
+        const responsavelUser= responsavel 
+
+    const createStatusRide=`INSERT INTO corrida_status ("id_corrida_status", 
+            "id_motorista", 
+            "id_corrida",
+            "status_corrida",
+            "responsável",
+            "created_at") 
+            VALUES (
+            '${id_corrida_status}',
+            '${id_motorista}',
+            '${idcorrida}',
+            '${statusCorrida}',
+            '${responsavelUser}',
+            NOW())` 
+
+    db.query(createStatusRide).then((result)=>{
+        return true
+    })
     })
 }
 
 
-const getAllRides = (req, res)=>{
+const getAllRidesUser = (req, res)=>{
     const idDriver = req.query.idDriver
-    const findAllRides =  `SELECT * FROM corrida where ID_MOTORISTA = '${idDriver}`
-    db.query(findAllRides).then((result)=>{
+    try {
+        const findAllRidesUser =  `SELECT 
+        corrida.id_corrida as corrida,
+        corrida.id_motorista as motorista,
+        users.nome as nome_motorista,
+        corrida.id_carro as idCarro,
+        corrida.bairro_partida as bairro_partida,
+        corrida.bairro_chegada as bairro_chegada,
+        corrida.data as data_corrida,
+        corrida.turno as turno_corrida,
+        corrida.quant_vaga as quantidade_vaga,
+        corrida.vagas_disponiveis as vagas_disponiveis,
+        json_agg(status ORDER BY status.created_at DESC) as status_array
+        from corrida
+        INNER JOIN corrida_status status on corrida.id_corrida = status.id_corrida
+        INNER JOIN users on corrida.id_motorista = users.id_user
+        where corrida.id_motorista = '${idDriver}'
+        GROUP BY corrida, nome
+        `
+    db.query(findAllRidesUser).then((result)=>{
         res.status(200).send(result)
     })
+        
+    } catch (error) {
+        res.status(400).send("Não foi localizar todas as corridas: ", error)
+    }
+}
+
+const getActiveRidesUser = (req, res)=>{ //TODO PEGAR SÓ CORRIDAS ATIVAS --CONFERIR SE STATUS.STATUS_CORRIDA != DELETADO FUNCIONA PARA ULTIMA CORRIDA
+    const idDriver = req.query.idDriver
+    try {
+        const findAllRidesUser =  `SELECT 
+        corrida.id_corrida as corrida,
+        corrida.id_motorista as motorista,
+        users.nome as nome_motorista,
+        corrida.id_carro as idCarro,
+        corrida.bairro_partida as bairro_partida,
+        corrida.bairro_chegada as bairro_chegada,
+        corrida.data as data_corrida,
+        corrida.turno as turno_corrida,
+        corrida.quant_vaga as quantidade_vaga,
+        corrida.vagas_disponiveis as vagas_disponiveis,
+        json_agg(status ORDER BY status.created_at DESC) as status_array
+        from corrida
+        INNER JOIN corrida_status status on corrida.id_corrida = status.id_corrida
+        INNER JOIN users on corrida.id_motorista = users.id_user
+        where corrida.id_motorista = '${idDriver}'
+        and
+        status.status_corrida != '%deletado%'
+        GROUP BY corrida, nome
+        `
+    db.query(findAllRidesUser).then((result)=>{
+        res.status(200).send(result)
+    })
+        
+    } catch (error) {
+        res.status(400).send("Não foi localizar todas as corridas: ", error)
+    }
+    
 }
 
 const getAllRidesADM = (req, res)=>{
-    const idDriver = req.query.idDriver
-    const findAllRides =  `SELECT * FROM corrida`
-    db.query(findAllRides).then((result)=>{
+
+    try {
+        const findAllRidesAdm =  `SELECT 
+        corrida.id_corrida as corrida,
+        corrida.id_motorista as motorista,
+        users.nome as nome_motorista,
+        corrida.id_carro as idCarro,
+        corrida.bairro_partida as bairro_partida,
+        corrida.bairro_chegada as bairro_chegada,
+        corrida.data as data_corrida,
+        corrida.turno as turno_corrida,
+        corrida.quant_vaga as quantidade_vaga,
+        corrida.vagas_disponiveis as vagas_disponiveis,
+        json_agg(status ORDER BY status.created_at DESC) as status_array
+        from corrida
+        INNER JOIN corrida_status status on corrida.id_corrida = status.id_corrida
+        INNER JOIN users on corrida.id_motorista = users.id_user
+        GROUP BY corrida, nome`
+        db.query(findAllRidesAdm).then((result)=>{
+            res.status(200).send(result)
+        })
+        
+    } catch (error) {
+        res.status(400).send("Não foi localizar todas as corridas (Administrador): ", error)
+    }
+    db.query(findAllRidesAdm).then((result)=>{
         res.status(200).send(result)
     })
 }
@@ -135,9 +232,10 @@ const updateRide = (req, res)=>{
 module.exports = {
     createRide:createRide,
     getActiveRide: getActiveRide,
-    getAllRides:getAllRides,
+    getAllRidesUser:getAllRidesUser,
     updateRide:updateRide,
     driverAceptRide:driverAceptRide,
     getAllRidesADM:getAllRidesADM,
-    finishRace:finishRace
+    finishRace:finishRace,
+    getActiveRidesUser:getActiveRidesUser
 }
