@@ -41,7 +41,7 @@ const getActiveRide = (req, res)=>{
     })
 }
 
-const finishRace = (req, res)=>{
+const finishRace = (req, res)=>{    //TODO: revisar função para conferir se pega a corrida certa
     const idDriver = req.query.idDriver
     
     const corridas= getAllRidesUser(idDriver)
@@ -50,26 +50,10 @@ const finishRace = (req, res)=>{
 
     corridas.forEach(item => {
         if (item.status[0]!= 'finished' && datenow.isAfter(item.Date)){
-
-            const newStatusFinished= getStatusUser(item.idCorrida)
-
-            const rideStatus = [
-                {
-                createAt: Date.now(),
-                status: 'finished',
-                responsavel: idDriver,
-                }
-            ]
-            newStatusFinished.unshift(rideStatus);
-            let atualizarCorrida = `UPDATE corrida SET Status_Corrida= '${newStatusFinished}'  where ID_CORRIDA ='${item.idCorrida}'`
-
             try {
-                db.query(atualizarCorrida).then((result)=>{
-                    res.status(200).send("Dados atualizados com sucesso")
-                })
-                
+                insertNewStatusRide(idDriver, "finished", idDriver, item.idcorrida)
             } catch (error) {
-                res.status(400).send("Não foi possivel atualizar: ", error)
+                res.status(400).send("Não foi possivel finalizar a corrida: ", error)
             }
 
         }
@@ -106,7 +90,7 @@ const insertNewStatusRide=(idUser, status,  responsavel, idcorrida)=>{ //VERIFIC
 }
 
 
-const getAllRidesUser = (req, res)=>{
+const getAllRidesUser = (req, res)=>{ //TUDO OK
     const idDriver = req.query.idDriver
     try {
         const findAllRidesUser =  `SELECT 
@@ -134,7 +118,7 @@ const getAllRidesUser = (req, res)=>{
     } catch (error) {
         res.status(400).send("Não foi localizar todas as corridas: ", error)
     }
-}
+} 
 
 const getActiveRidesUser = (req, res)=>{ //TODO PEGAR SÓ CORRIDAS ATIVAS --CONFERIR SE STATUS.STATUS_CORRIDA != DELETADO FUNCIONA PARA ULTIMA CORRIDA
     const idDriver = req.query.idDriver
@@ -169,7 +153,7 @@ const getActiveRidesUser = (req, res)=>{ //TODO PEGAR SÓ CORRIDAS ATIVAS --CONF
     
 }
 
-const getAllRidesADM = (req, res)=>{
+const getAllRidesADM = (req, res)=>{ //TUDO OK
 
     try {
         const findAllRidesAdm =  `SELECT 
@@ -214,14 +198,12 @@ const driverAceptRide = (req, res)=>{
     // }
                 
 }
-const updateRide = (req, res)=>{
+const deleteRide = (req, res)=>{
     const idRide = req.body.idRide
-    const status= req.body.status
-    try {
-        const updateRide= `UPDATE corrida SET statusRide= '${status}' where idRide ='${idRide}'`
-        db.query(updateRide).then((result)=>{
-            res.status(200).send("Carona deletada com sucesso.")
-        })
+    const id_user= req.body.id_user
+    const responsavel= req.body.responsavel
+     try {
+        insertNewStatusRide(id_user, "deletado",  responsavel, idRide)
         
     } catch (error) {
         res.status(400).send("Não foi possivel deletar a carona: ", error)
@@ -233,7 +215,7 @@ module.exports = {
     createRide:createRide,
     getActiveRide: getActiveRide,
     getAllRidesUser:getAllRidesUser,
-    updateRide:updateRide,
+    deleteRide:deleteRide,
     driverAceptRide:driverAceptRide,
     getAllRidesADM:getAllRidesADM,
     finishRace:finishRace,
